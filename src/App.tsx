@@ -19,7 +19,7 @@ import jsPDF from 'jspdf';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
-export type EditorTab = 'personal' | 'experience' | 'education' | 'skills' | 'ai';
+export type EditorTab = 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'ai';
 
 export default function App() {
   const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
@@ -73,10 +73,62 @@ export default function App() {
         { id: 'experience', name: 'Work Experience', icon: <Briefcase size={16} /> },
         { id: 'education', name: 'Education', icon: <GraduationCap size={16} /> },
         { id: 'skills', name: 'Skills & Tech', icon: <Code size={16} /> },
+        { id: 'projects', name: 'Key Projects', icon: <LayoutPanelLeft size={16} /> },
         { id: 'ai', name: 'AI Laboratory', icon: <BrainCircuit size={16} /> },
       ]
     }
   ];
+
+  const calculateScore = () => {
+    let score = 30; // Base score
+    if (resumeData.personalInfo.summary.length > 50) score += 10;
+    if (resumeData.experience.length >= 2) score += 15;
+    if (resumeData.education.length >= 1) score += 10;
+    if (resumeData.skills.length >= 5) score += 15;
+    if (resumeData.projects.length >= 1) score += 10;
+    if (resumeData.personalInfo.phone && resumeData.personalInfo.email) score += 10;
+    return Math.min(score, 100);
+  };
+
+  const getSuggestions = () => {
+    const suggestions = [];
+    if (resumeData.personalInfo.summary.length < 100) {
+      suggestions.push({
+        title: "Short Summary",
+        text: "Your professional summary is a bit brief. Aim for 3-4 sentences to capture recruiter interest.",
+        priority: "high"
+      });
+    }
+    if (resumeData.experience.length < 2) {
+      suggestions.push({
+        title: "Add Experience",
+        text: "Adding more work history can significanly improve your profile scannability.",
+        priority: "high"
+      });
+    }
+    if (resumeData.skills.length < 8) {
+      suggestions.push({
+        title: "Skill Density",
+        text: `You have ${resumeData.skills.length} skills. Industry leaders typically list 8-12 core competencies.`,
+        priority: "medium"
+      });
+    }
+    if (resumeData.projects.length === 0) {
+      suggestions.push({
+        title: "Portfolio Projects",
+        text: "Highlighting a key project can demonstrate your methodology and impact.",
+        priority: "medium"
+      });
+    }
+    return suggestions.length > 0 ? suggestions : [{
+      title: "All Clear!",
+      text: "Your resume structure is solid. Consider using the AI Lab for job-specific optimization.",
+      priority: "low"
+    }];
+  };
+
+  const score = calculateScore();
+  const suggestions = getSuggestions();
 
   return (
     <div className="flex h-screen bg-bg overflow-hidden text-text-main font-sans">
@@ -130,6 +182,16 @@ export default function App() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="mt-auto pt-8 border-t border-border">
+            <div className="flex items-center gap-2 px-3 mb-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Cloud Sync Active</span>
+            </div>
+            <div className="px-3 text-[10px] text-slate-300 italic">
+                Last auto-save: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
         </div>
       </nav>
 
@@ -199,21 +261,40 @@ export default function App() {
 
         <div className="p-5 bg-slate-900 m-5 rounded-xl text-white">
           <div className="text-[10px] uppercase opacity-70 mb-1">ATS Scannability</div>
-          <div className="text-3xl font-extrabold text-[#4ADE80]">94/100</div>
-          <div className="text-[11px] mt-2 text-slate-400">Excellent Optimization</div>
+          <motion.div 
+            key={score}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={cn(
+                "text-3xl font-extrabold",
+                score > 80 ? "text-[#4ADE80]" : score > 50 ? "text-amber-400" : "text-red-400"
+            )}
+          >
+            {score}/100
+          </motion.div>
+          <div className="text-[11px] mt-2 text-slate-400">
+            {score > 80 ? 'Excellent Optimization' : score > 50 ? 'Needs Improvement' : 'Incomplete Profile'}
+          </div>
         </div>
 
         <div className="p-5 flex-1 overflow-y-auto">
           <h3 className="text-[10px] uppercase tracking-widest font-bold text-text-muted mb-4 font-sans">Content Suggestions</h3>
           <div className="space-y-4">
-            <div className="p-4 border border-border rounded-xl text-xs bg-white border-l-4 border-l-amber-500 shadow-sm">
-              <div className="font-bold mb-1 text-slate-800">Impact Verbs Needed</div>
-              <p className="text-text-muted leading-relaxed">Consider replacing "worked on" with "engineered" or "streamlined" in your latest role.</p>
-            </div>
-            <div className="p-4 border border-border rounded-xl text-xs bg-white shadow-sm">
-              <div className="font-bold mb-1 text-slate-800">Keyword Match</div>
-              <p className="text-text-muted leading-relaxed">Add the phrase "Strategic Roadmap" to your summary for better alignment with the job title.</p>
-            </div>
+            {suggestions.map((s, i) => (
+                <motion.div 
+                   key={s.title}
+                   initial={{ opacity: 0, x: 20 }}
+                   animate={{ opacity: 1, x: 0 }}
+                   transition={{ delay: i * 0.1 }}
+                   className={cn(
+                       "p-4 border border-border rounded-xl text-xs bg-white shadow-sm border-l-4",
+                       s.priority === 'high' ? "border-l-red-500" : s.priority === 'medium' ? "border-l-amber-500" : "border-l-green-500"
+                   )}
+                >
+                    <div className="font-bold mb-1 text-slate-800">{s.title}</div>
+                    <p className="text-text-muted leading-relaxed">{s.text}</p>
+                </motion.div>
+            ))}
           </div>
         </div>
 

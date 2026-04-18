@@ -8,11 +8,11 @@ import { suggestSummary, suggestSkills } from '../services/aiService';
 interface Props {
   data: ResumeData;
   onChange: (data: ResumeData) => void;
-  activeTabOverride?: 'personal' | 'experience' | 'education' | 'skills' | 'ai';
+  activeTabOverride?: 'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'ai';
 }
 
 export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverride }) => {
-  const [internalTab, setInternalTab] = useState<'personal' | 'experience' | 'education' | 'skills' | 'ai'>('personal');
+  const [internalTab, setInternalTab] = useState<'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'ai'>('personal');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [jobDescription, setJobDescription] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState('');
@@ -111,6 +111,27 @@ export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverrid
 
   const removeEducation = (id: string) => {
     onChange({ ...data, education: data.education.filter(edu => edu.id !== id) });
+  };
+
+  const addProject = () => {
+    const newProject = {
+      id: Date.now().toString(),
+      name: '',
+      description: '',
+      link: ''
+    };
+    onChange({ ...data, projects: [newProject, ...data.projects] });
+  };
+
+  const updateProject = (id: string, field: string, value: string) => {
+    onChange({
+      ...data,
+      projects: data.projects.map(p => p.id === id ? { ...p, [field]: value } : p)
+    });
+  };
+
+  const removeProject = (id: string) => {
+    onChange({ ...data, projects: data.projects.filter(p => p.id !== id) });
   };
 
   const renderPersonal = () => (
@@ -296,26 +317,48 @@ export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverrid
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         {data.skills.map((skill) => (
-          <div key={skill.id} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg group">
-            <input
-              className="flex-1 text-sm font-medium outline-none"
-              value={skill.name}
-              onChange={(e) => {
-                onChange({
-                  ...data,
-                  skills: data.skills.map(s => s.id === skill.id ? { ...s, name: e.target.value } : s)
-                });
-              }}
-            />
+          <div key={skill.id} className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-xl group hover:border-accent/40 transition-colors">
+            <div className="flex-1">
+               <input
+                className="w-full text-sm font-bold outline-none mb-1 bg-transparent"
+                value={skill.name}
+                placeholder="Skill name..."
+                onChange={(e) => {
+                  onChange({
+                    ...data,
+                    skills: data.skills.map(s => s.id === skill.id ? { ...s, name: e.target.value } : s)
+                  });
+                }}
+              />
+              <div className="flex gap-2">
+                {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map((lvl) => (
+                  <button
+                    key={lvl}
+                    onClick={() => {
+                        onChange({
+                            ...data,
+                            skills: data.skills.map(s => s.id === skill.id ? { ...s, level: lvl as any } : s)
+                        });
+                    }}
+                    className={cn(
+                      "text-[9px] uppercase tracking-tighter px-2 py-0.5 rounded transition-all font-bold",
+                      skill.level === lvl ? "bg-accent text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                    )}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+            </div>
             <button
               onClick={() => {
                 onChange({ ...data, skills: data.skills.filter(s => s.id !== skill.id) });
               }}
-              className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100"
+              className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <Trash2 size={16} />
+              <Trash2 size={18} />
             </button>
           </div>
         ))}
@@ -324,9 +367,9 @@ export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverrid
             const newSkill: Skill = { id: Date.now().toString(), name: '', level: 'Intermediate' };
             onChange({ ...data, skills: [...data.skills, newSkill] });
           }}
-          className="p-3 border-2 border-dashed border-slate-200 rounded-lg text-slate-400 text-sm font-bold hover:border-accent hover:text-accent transition-all"
+          className="p-4 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-bold hover:border-accent hover:text-accent transition-all flex items-center justify-center gap-2"
         >
-           + ADD SKILL
+           <Plus size={16} /> ADD SKILL MANUALLY
         </button>
       </div>
     </div>
@@ -384,6 +427,58 @@ export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverrid
     </div>
   );
 
+  const renderProjects = () => (
+    <div className="flex flex-col gap-8">
+      <div className="flex justify-between items-center">
+        <h3 className="font-display font-bold text-slate-700">Key Projects</h3>
+        <button
+          onClick={addProject}
+          className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors"
+        >
+          <Plus size={16} /> Add Project
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        {data.projects.map((proj) => (
+          <div key={proj.id} className="p-6 bg-white border border-slate-200 rounded-xl relative group">
+            <button
+              onClick={() => removeProject(proj.id)}
+              className="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 size={18} />
+            </button>
+            <div className="flex flex-col gap-4">
+              <input
+                placeholder="Project Name"
+                className="w-full p-2 bg-transparent border-b border-slate-200 focus:border-accent outline-none font-bold text-lg"
+                value={proj.name}
+                onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
+              />
+              <input
+                placeholder="Project Link (Optional)"
+                className="w-full p-2 bg-transparent border-b border-slate-50 focus:border-accent outline-none text-xs text-blue-500 font-mono"
+                value={proj.link}
+                onChange={(e) => updateProject(proj.id, 'link', e.target.value)}
+              />
+              <textarea
+                placeholder="Briefly describe the project, impact, and technologies used..."
+                rows={3}
+                className="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg outline-none text-sm resize-none"
+                value={proj.description}
+                onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
+              />
+            </div>
+          </div>
+        ))}
+        {data.projects.length === 0 && (
+          <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-2xl">
+            <p className="text-slate-400 text-sm">No highlighted projects yet.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
   const renderAiLab = () => (
     <div className="flex flex-col gap-6">
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-2xl text-white">
@@ -450,6 +545,7 @@ export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverrid
               {activeTab === 'experience' && 'Work Experience'}
               {activeTab === 'education' && 'Education & Degrees'}
               {activeTab === 'skills' && 'Skills & Expertise'}
+              {activeTab === 'projects' && 'Key Projects'}
               {activeTab === 'ai' && 'AI Optimization Lab'}
             </h2>
             <p className="text-xs text-text-muted mt-0.5">Edit your contents here</p>
@@ -468,6 +564,7 @@ export const ResumeEditor: React.FC<Props> = ({ data, onChange, activeTabOverrid
             {activeTab === 'experience' && renderExperience()}
             {activeTab === 'skills' && renderSkills()}
             {activeTab === 'education' && renderEducation()}
+            {activeTab === 'projects' && renderProjects()}
             {activeTab === 'ai' && renderAiLab()}
           </motion.div>
         </AnimatePresence>

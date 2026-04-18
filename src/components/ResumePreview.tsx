@@ -105,6 +105,23 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, Props>(({ data, te
             ))}
           </div>
         </div>
+
+        {projects.length > 0 && (
+          <div>
+            <h3 className="text-sm font-display font-bold uppercase tracking-widest text-slate-900 mb-4 border-b-2 border-slate-900 pb-2">Key Projects</h3>
+            <div className="flex flex-col gap-4">
+              {projects.map((proj) => (
+                <div key={proj.id}>
+                  <div className="flex justify-between items-baseline mb-1">
+                    <h4 className="font-bold text-slate-900 leading-tight">{proj.name}</h4>
+                    {proj.link && <span className="text-[7pt] text-accent font-mono truncate max-w-[150px]">{proj.link}</span>}
+                  </div>
+                  <p className="text-[9pt] text-slate-600 leading-relaxed">{proj.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -151,6 +168,22 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, Props>(({ data, te
               ))}
             </div>
           </section>
+
+          {projects.length > 0 && (
+            <section>
+              <h2 className="text-xs uppercase tracking-[0.2em] font-bold text-slate-400 mb-6">Notable Projects</h2>
+              <div className="flex flex-col gap-8">
+                {projects.map((proj) => (
+                  <div key={proj.id} className="relative pl-6 border-l border-slate-100">
+                    <div className="absolute top-0 left-[-4px] w-2 h-2 rounded-full bg-slate-200" />
+                    <h3 className="text-[11pt] font-medium text-slate-900 mb-1">{proj.name}</h3>
+                    {proj.link && <p className="text-[8pt] text-accent mb-2">{proj.link}</p>}
+                    <p className="text-[10pt] text-slate-600 font-light leading-relaxed">{proj.description}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         <div className="col-span-4 flex flex-col gap-10">
@@ -223,15 +256,52 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, Props>(({ data, te
         </div>
       </section>
 
+      {projects.length > 0 && (
+        <section>
+          <div className="text-[12px] font-bold uppercase tracking-widest text-accent border-b border-slate-200 pb-1 mb-4">
+            Key Projects & Case Studies
+          </div>
+          <div className="flex flex-col gap-4">
+            {projects.map((proj) => (
+              <div key={proj.id}>
+                <h4 className="font-bold text-slate-900 text-[11px] mb-1">{proj.name}</h4>
+                <p className="text-[10px] text-slate-700 leading-relaxed">{proj.description}</p>
+                {proj.link && <p className="text-[9px] text-accent mt-1 font-mono">{proj.link}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
         <div className="text-[12px] font-bold uppercase tracking-widest text-accent border-b border-slate-200 pb-1 mb-3">
           Core Skills
         </div>
         <div className="flex flex-wrap gap-2">
           {skills.map((skill) => (
-            <span key={skill.id} className="bg-slate-100 px-2 py-1 rounded-sm text-[10px] text-slate-700 font-medium">
-              {skill.name}
-            </span>
+            <div key={skill.id} className="flex flex-col">
+               <span className="bg-slate-100 px-2 py-1 rounded-sm text-[10px] text-slate-700 font-bold">
+                {skill.name}
+              </span>
+              <span className="text-[7px] uppercase tracking-tighter text-slate-400 text-center font-bold mt-0.5">{skill.level}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <div className="text-[12px] font-bold uppercase tracking-widest text-accent border-b border-slate-200 pb-1 mb-3">
+          Education
+        </div>
+        <div className="flex flex-col gap-4">
+          {education.map((edu) => (
+            <div key={edu.id}>
+               <div className="flex justify-between items-baseline">
+                <h3 className="font-bold text-slate-900 text-[11px]">{edu.school}</h3>
+                <span className="text-[10px] font-bold text-slate-500">{edu.endDate}</span>
+              </div>
+              <p className="text-[10px] text-slate-600 italic">{edu.degree} in {edu.fieldOfStudy}</p>
+            </div>
           ))}
         </div>
       </section>
